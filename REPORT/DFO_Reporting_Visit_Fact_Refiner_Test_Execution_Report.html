@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>DFO_Reporting_Visit_Fact_Refiner_Test_Execution_Report.html</title>
+    <style>body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #E6E6E6;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #E6E6E6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.log {
+  background-color: #e6e6e6;
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  height: 230px;
+  overflow-y: scroll;
+  padding: 5px;
+  white-space: pre-wrap;
+}
+.log:only-child {
+  height: inherit;
+}
+
+div.image {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin-left: 5px;
+  overflow: hidden;
+  width: 320px;
+}
+div.image img {
+  width: 320px;
+}
+
+div.video {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin-left: 5px;
+  overflow: hidden;
+  width: 320px;
+}
+div.video video {
+  overflow: hidden;
+  width: 320px;
+  height: 240px;
+}
+
+.collapsed {
+  display: none;
+}
+
+.expander::after {
+  content: " (show details)";
+  color: #BBB;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.collapser::after {
+  content: " (hide details)";
+  color: #BBB;
+  font-style: italic;
+  cursor: pointer;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+
+.sort-icon {
+  font-size: 0px;
+  float: left;
+  margin-right: 5px;
+  margin-top: 5px;
+  /*triangle*/
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+}
+.inactive .sort-icon {
+  /*finish triangle*/
+  border-top: 8px solid #E6E6E6;
+}
+.asc.active .sort-icon {
+  /*finish triangle*/
+  border-bottom: 8px solid #999;
+}
+.desc.active .sort-icon {
+  /*finish triangle*/
+  border-top: 8px solid #999;
+}
+</style></head>
+  <body onLoad="init()">
+    <script>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function toArray(iter) {
+    if (iter === null) {
+        return null;
+    }
+    return Array.prototype.slice.call(iter);
+}
+
+function find(selector, elem) { // eslint-disable-line no-redeclare
+    if (!elem) {
+        elem = document;
+    }
+    return elem.querySelector(selector);
+}
+
+function findAll(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return toArray(elem.querySelectorAll(selector));
+}
+
+function sortColumn(elem) {
+    toggleSortStates(elem);
+    const colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
+    let key;
+    if (elem.classList.contains('result')) {
+        key = keyResult;
+    } else if (elem.classList.contains('links')) {
+        key = keyLink;
+    } else {
+        key = keyAlpha;
+    }
+    sortTable(elem, key(colIndex));
+}
+
+function showAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(showExtras);
+}
+
+function hideAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(hideExtras);
+}
+
+function showExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.remove('collapsed');
+    expandcollapse.classList.remove('expander');
+    expandcollapse.classList.add('collapser');
+}
+
+function hideExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.add('collapsed');
+    expandcollapse.classList.remove('collapser');
+    expandcollapse.classList.add('expander');
+}
+
+function showFilters() {
+    let visibleString = getQueryParameter('visible') || 'all';
+    visibleString = visibleString.toLowerCase();
+    const checkedItems = visibleString.split(',');
+
+    const filterItems = document.getElementsByClassName('filter');
+    for (let i = 0; i < filterItems.length; i++) {
+        filterItems[i].hidden = false;
+
+        if (visibleString != 'all') {
+            filterItems[i].checked = checkedItems.includes(filterItems[i].getAttribute('data-test-result'));
+            filterTable(filterItems[i]);
+        }
+    }
+}
+
+function addCollapse() {
+    // Add links for show/hide all
+    const resulttable = find('table#results-table');
+    const showhideall = document.createElement('p');
+    showhideall.innerHTML = '<a href="javascript:showAllExtras()">Show all details</a> / ' +
+                            '<a href="javascript:hideAllExtras()">Hide all details</a>';
+    resulttable.parentElement.insertBefore(showhideall, resulttable);
+
+    // Add show/hide link to each result
+    findAll('.col-result').forEach(function(elem) {
+        const collapsed = getQueryParameter('collapsed') || 'Passed';
+        const extras = elem.parentNode.nextElementSibling;
+        const expandcollapse = document.createElement('span');
+        if (extras.classList.contains('collapsed')) {
+            expandcollapse.classList.add('expander');
+        } else if (collapsed.includes(elem.innerHTML)) {
+            extras.classList.add('collapsed');
+            expandcollapse.classList.add('expander');
+        } else {
+            expandcollapse.classList.add('collapser');
+        }
+        elem.appendChild(expandcollapse);
+
+        elem.addEventListener('click', function(event) {
+            if (event.currentTarget.parentNode.nextElementSibling.classList.contains('collapsed')) {
+                showExtras(event.currentTarget);
+            } else {
+                hideExtras(event.currentTarget);
+            }
+        });
+    });
+}
+
+function getQueryParameter(name) {
+    const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function init () { // eslint-disable-line no-unused-vars
+    resetSortHeaders();
+
+    addCollapse();
+
+    showFilters();
+
+    sortColumn(find('.initial-sort'));
+
+    findAll('.sortable').forEach(function(elem) {
+        elem.addEventListener('click',
+            function() {
+                sortColumn(elem);
+            }, false);
+    });
+}
+
+function sortTable(clicked, keyFunc) {
+    const rows = findAll('.results-table-row');
+    const reversed = !clicked.classList.contains('asc');
+    const sortedRows = sort(rows, keyFunc, reversed);
+    /* Whole table is removed here because browsers acts much slower
+     * when appending existing elements.
+     */
+    const thead = document.getElementById('results-table-head');
+    document.getElementById('results-table').remove();
+    const parent = document.createElement('table');
+    parent.id = 'results-table';
+    parent.appendChild(thead);
+    sortedRows.forEach(function(elem) {
+        parent.appendChild(elem);
+    });
+    document.getElementsByTagName('BODY')[0].appendChild(parent);
+}
+
+function sort(items, keyFunc, reversed) {
+    const sortArray = items.map(function(item, i) {
+        return [keyFunc(item), i];
+    });
+
+    sortArray.sort(function(a, b) {
+        const keyA = a[0];
+        const keyB = b[0];
+
+        if (keyA == keyB) return 0;
+
+        if (reversed) {
+            return keyA < keyB ? 1 : -1;
+        } else {
+            return keyA > keyB ? 1 : -1;
+        }
+    });
+
+    return sortArray.map(function(item) {
+        const index = item[1];
+        return items[index];
+    });
+}
+
+function keyAlpha(colIndex) {
+    return function(elem) {
+        return elem.childNodes[1].childNodes[colIndex].firstChild.data.toLowerCase();
+    };
+}
+
+function keyLink(colIndex) {
+    return function(elem) {
+        const dataCell = elem.childNodes[1].childNodes[colIndex].firstChild;
+        return dataCell == null ? '' : dataCell.innerText.toLowerCase();
+    };
+}
+
+function keyResult(colIndex) {
+    return function(elem) {
+        const strings = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed',
+            'Skipped', 'Passed'];
+        return strings.indexOf(elem.childNodes[1].childNodes[colIndex].firstChild.data);
+    };
+}
+
+function resetSortHeaders() {
+    findAll('.sort-icon').forEach(function(elem) {
+        elem.parentNode.removeChild(elem);
+    });
+    findAll('.sortable').forEach(function(elem) {
+        const icon = document.createElement('div');
+        icon.className = 'sort-icon';
+        icon.textContent = 'vvv';
+        elem.insertBefore(icon, elem.firstChild);
+        elem.classList.remove('desc', 'active');
+        elem.classList.add('asc', 'inactive');
+    });
+}
+
+function toggleSortStates(elem) {
+    //if active, toggle between asc and desc
+    if (elem.classList.contains('active')) {
+        elem.classList.toggle('asc');
+        elem.classList.toggle('desc');
+    }
+
+    //if inactive, reset all other functions and add ascending active
+    if (elem.classList.contains('inactive')) {
+        resetSortHeaders();
+        elem.classList.remove('inactive');
+        elem.classList.add('active');
+    }
+}
+
+function isAllRowsHidden(value) {
+    return value.hidden == false;
+}
+
+function filterTable(elem) { // eslint-disable-line no-unused-vars
+    const outcomeAtt = 'data-test-result';
+    const outcome = elem.getAttribute(outcomeAtt);
+    const classOutcome = outcome + ' results-table-row';
+    const outcomeRows = document.getElementsByClassName(classOutcome);
+
+    for(let i = 0; i < outcomeRows.length; i++){
+        outcomeRows[i].hidden = !elem.checked;
+    }
+
+    const rows = findAll('.results-table-row').filter(isAllRowsHidden);
+    const allRowsHidden = rows.length == 0 ? true : false;
+    const notFoundMessage = document.getElementById('not-found-message');
+    notFoundMessage.hidden = !allRowsHidden;
+}
+</script>
+    <h1>DFO_Reporting_Visit_Fact_Refiner_Test_Execution_Report.html</h1>
+    <p>Report generated on 08-Aug-2023 at 18:24:19 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.2.0</p>
+    <h2>Environment</h2>
+    <table id="environment">
+      <tr>
+        <td>Base URL</td>
+        <td></td></tr>
+      <tr>
+        <td>JAVA_HOME</td>
+        <td>C:\Program Files\Java\jdk-17</td></tr>
+      <tr>
+        <td>Packages</td>
+        <td>{"pluggy": "1.0.0", "pytest": "7.2.0"}</td></tr>
+      <tr>
+        <td>Platform</td>
+        <td>Windows-10-10.0.22621-SP0</td></tr>
+      <tr>
+        <td>Plugins</td>
+        <td>{"allure-pytest": "2.13.2", "base-url": "2.0.0", "html": "3.2.0", "html-reporter": "0.2.9", "metadata": "2.0.4", "playwright": "0.3.0"}</td></tr>
+      <tr>
+        <td>Python</td>
+        <td>3.11.1</td></tr></table>
+    <h2>Summary</h2>
+    <p>15 tests ran in 13.59 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">15 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <h2>Results</h2>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable result initial-sort" col="result">Result</th>
+          <th class="sortable" col="name">Test</th>
+          <th class="sortable" col="duration">Duration</th>
+          <th class="sortable links" col="links">Links</th></tr>
+        <tr hidden="true" id="not-found-message">
+          <th colspan="4">No results found. Try to check the filters</th></tr></thead>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_duplicate_records_validation_01</td>
+          <td class="col-duration">1.23</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-08 18:24:10,651-132:  Objective - Validation of duplicate records of the VISIT_FACT table
+2023-08-08 18:24:11,870-144:  Validation Passed, No Duplicate records in the VISIT_FACT table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_referrer_search_engine_records_validation_02</td>
+          <td class="col-duration">1.30</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:11,872-71:  Objective - Validation of the VISIT_REFERRER_SEARCH_ENGINE field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:13,180-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:13,181-89:  Total records identified for VISIT_REFERRER_SEARCH_ENGINE field of VISIT_FACT table: 2260
+2023-08-08 18:24:13,181-92:  Passed records identified for VISIT_REFERRER_SEARCH_ENGINE field of VISIT_FACT table:  2260
+2023-08-08 18:24:13,181-95:  Failed records identified for VISIT_REFERRER_SEARCH_ENGINE field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_utm_campaign_name_records_validation_05</td>
+          <td class="col-duration">0.65</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:13,184-71:  Objective - Validation of the VISIT_UTM_CAMPAIGN_NAME field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:13,834-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:13,834-89:  Total records identified for VISIT_UTM_CAMPAIGN_NAME field of VISIT_FACT table: 2260
+2023-08-08 18:24:13,834-92:  Passed records identified for VISIT_UTM_CAMPAIGN_NAME field of VISIT_FACT table:  2260
+2023-08-08 18:24:13,834-95:  Failed records identified for VISIT_UTM_CAMPAIGN_NAME field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_utm_context_text_records_validation_06</td>
+          <td class="col-duration">0.49</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:13,837-71:  Objective - Validation of the VISIT_UTM_CONTENT_TEXT field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:14,334-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:14,334-89:  Total records identified for VISIT_UTM_CONTENT_TEXT field of VISIT_FACT table: 2260
+2023-08-08 18:24:14,334-92:  Passed records identified for VISIT_UTM_CONTENT_TEXT field of VISIT_FACT table:  2260
+2023-08-08 18:24:14,334-95:  Failed records identified for VISIT_UTM_CONTENT_TEXT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_utm_medium_name_records_validation_07</td>
+          <td class="col-duration">0.50</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:14,336-71:  Objective - Validation of the VISIT_UTM_MEDIUM_NAME field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:14,839-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:14,840-89:  Total records identified for VISIT_UTM_MEDIUM_NAME field of VISIT_FACT table: 2260
+2023-08-08 18:24:14,840-92:  Passed records identified for VISIT_UTM_MEDIUM_NAME field of VISIT_FACT table:  2260
+2023-08-08 18:24:14,840-95:  Failed records identified for VISIT_UTM_MEDIUM_NAME field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_utm_source_name_records_validation_08</td>
+          <td class="col-duration">0.48</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:14,843-71:  Objective - Validation of the VISIT_UTM_SOURCE_NAME field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:15,329-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:15,329-89:  Total records identified for VISIT_UTM_SOURCE_NAME field of VISIT_FACT table: 2260
+2023-08-08 18:24:15,330-92:  Passed records identified for VISIT_UTM_SOURCE_NAME field of VISIT_FACT table:  2260
+2023-08-08 18:24:15,330-95:  Failed records identified for VISIT_UTM_SOURCE_NAME field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_utm_term_name_records_validation_09</td>
+          <td class="col-duration">0.50</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:15,332-71:  Objective - Validation of the VISIT_UTM_TERM_NAME field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:15,840-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:15,840-89:  Total records identified for VISIT_UTM_TERM_NAME field of VISIT_FACT table: 2260
+2023-08-08 18:24:15,840-92:  Passed records identified for VISIT_UTM_TERM_NAME field of VISIT_FACT table:  2260
+2023-08-08 18:24:15,840-95:  Failed records identified for VISIT_UTM_TERM_NAME field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_chat_opened_count_records_validation_12</td>
+          <td class="col-duration">0.99</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:15,843-71:  Objective - Validation of the CHAT_OPENED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:16,837-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:16,838-89:  Total records identified for CHAT_OPENED_COUNT field of VISIT_FACT table: 1119
+2023-08-08 18:24:16,838-92:  Passed records identified for CHAT_OPENED_COUNT field of VISIT_FACT table:  1119
+2023-08-08 18:24:16,838-95:  Failed records identified for CHAT_OPENED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_knowledge_base_article_records_validation_13</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:16,841-71:  Objective - Validation of the KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:17,196-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:17,197-89:  Total records identified for KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT field of VISIT_FACT table: 0
+2023-08-08 18:24:17,197-92:  Passed records identified for KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT field of VISIT_FACT table:  0
+2023-08-08 18:24:17,197-95:  Failed records identified for KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_proactive_displayed_records_validation_14</td>
+          <td class="col-duration">0.38</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:17,203-71:  Objective - Validation of the PROACTIVE_DISPLAYED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:17,581-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:17,581-89:  Total records identified for PROACTIVE_DISPLAYED_COUNT field of VISIT_FACT table: 0
+2023-08-08 18:24:17,581-92:  Passed records identified for PROACTIVE_DISPLAYED_COUNT field of VISIT_FACT table:  0
+2023-08-08 18:24:17,581-95:  Failed records identified for PROACTIVE_DISPLAYED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_proactive_clicked_records_validation_15</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:17,587-71:  Objective - Validation of the PROACTIVE_CLICKED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:17,935-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:17,935-89:  Total records identified for PROACTIVE_CLICKED_COUNT field of VISIT_FACT table: 0
+2023-08-08 18:24:17,936-92:  Passed records identified for PROACTIVE_CLICKED_COUNT field of VISIT_FACT table:  0
+2023-08-08 18:24:17,936-95:  Failed records identified for PROACTIVE_CLICKED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_proactive_success_records_validation_16</td>
+          <td class="col-duration">0.37</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:17,938-71:  Objective - Validation of the PROACTIVE_SUCCESS_COUNT field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:18,312-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:18,313-89:  Total records identified for PROACTIVE_SUCCESS_COUNT field of VISIT_FACT table: 0
+2023-08-08 18:24:18,313-92:  Passed records identified for PROACTIVE_SUCCESS_COUNT field of VISIT_FACT table:  0
+2023-08-08 18:24:18,313-95:  Failed records identified for PROACTIVE_SUCCESS_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_proactive_failed_records_validation_17</td>
+          <td class="col-duration">0.38</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:18,320-71:  Objective - Validation of the PROACTIVE_FAILED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:18,700-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:18,700-89:  Total records identified for PROACTIVE_FAILED_COUNT field of VISIT_FACT table: 0
+2023-08-08 18:24:18,701-92:  Passed records identified for PROACTIVE_FAILED_COUNT field of VISIT_FACT table:  0
+2023-08-08 18:24:18,701-95:  Failed records identified for PROACTIVE_FAILED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_visit_page_viewed_count_records_validation_18</td>
+          <td class="col-duration">0.62</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-08 18:24:18,707-71:  Objective - Validation of the PAGE_VIEWED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-08 18:24:19,333-88:  ---------------- Validation Passed ----------------
+2023-08-08 18:24:19,333-89:  Total records identified for PAGE_VIEWED_COUNT field of VISIT_FACT table: 1123
+2023-08-08 18:24:19,333-92:  Passed records identified for PAGE_VIEWED_COUNT field of VISIT_FACT table:  1123
+2023-08-08 18:24:19,333-95:  Failed records identified for PAGE_VIEWED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_011_visit_fact_refiner_validation.py::test_close_snowflake_connection</td>
+          <td class="col-duration">0.00</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody></table></body></html>

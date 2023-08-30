@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>DFO_Reporting_Regression_Test_Suite_Execution_Report_23.2.3.html</title>
+    <style>body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #E6E6E6;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #E6E6E6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.log {
+  background-color: #e6e6e6;
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  height: 230px;
+  overflow-y: scroll;
+  padding: 5px;
+  white-space: pre-wrap;
+}
+.log:only-child {
+  height: inherit;
+}
+
+div.image {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin-left: 5px;
+  overflow: hidden;
+  width: 320px;
+}
+div.image img {
+  width: 320px;
+}
+
+div.video {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin-left: 5px;
+  overflow: hidden;
+  width: 320px;
+}
+div.video video {
+  overflow: hidden;
+  width: 320px;
+  height: 240px;
+}
+
+.collapsed {
+  display: none;
+}
+
+.expander::after {
+  content: " (show details)";
+  color: #BBB;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.collapser::after {
+  content: " (hide details)";
+  color: #BBB;
+  font-style: italic;
+  cursor: pointer;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+
+.sort-icon {
+  font-size: 0px;
+  float: left;
+  margin-right: 5px;
+  margin-top: 5px;
+  /*triangle*/
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+}
+.inactive .sort-icon {
+  /*finish triangle*/
+  border-top: 8px solid #E6E6E6;
+}
+.asc.active .sort-icon {
+  /*finish triangle*/
+  border-bottom: 8px solid #999;
+}
+.desc.active .sort-icon {
+  /*finish triangle*/
+  border-top: 8px solid #999;
+}
+</style></head>
+  <body onLoad="init()">
+    <script>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function toArray(iter) {
+    if (iter === null) {
+        return null;
+    }
+    return Array.prototype.slice.call(iter);
+}
+
+function find(selector, elem) { // eslint-disable-line no-redeclare
+    if (!elem) {
+        elem = document;
+    }
+    return elem.querySelector(selector);
+}
+
+function findAll(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return toArray(elem.querySelectorAll(selector));
+}
+
+function sortColumn(elem) {
+    toggleSortStates(elem);
+    const colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
+    let key;
+    if (elem.classList.contains('result')) {
+        key = keyResult;
+    } else if (elem.classList.contains('links')) {
+        key = keyLink;
+    } else {
+        key = keyAlpha;
+    }
+    sortTable(elem, key(colIndex));
+}
+
+function showAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(showExtras);
+}
+
+function hideAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(hideExtras);
+}
+
+function showExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.remove('collapsed');
+    expandcollapse.classList.remove('expander');
+    expandcollapse.classList.add('collapser');
+}
+
+function hideExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.add('collapsed');
+    expandcollapse.classList.remove('collapser');
+    expandcollapse.classList.add('expander');
+}
+
+function showFilters() {
+    let visibleString = getQueryParameter('visible') || 'all';
+    visibleString = visibleString.toLowerCase();
+    const checkedItems = visibleString.split(',');
+
+    const filterItems = document.getElementsByClassName('filter');
+    for (let i = 0; i < filterItems.length; i++) {
+        filterItems[i].hidden = false;
+
+        if (visibleString != 'all') {
+            filterItems[i].checked = checkedItems.includes(filterItems[i].getAttribute('data-test-result'));
+            filterTable(filterItems[i]);
+        }
+    }
+}
+
+function addCollapse() {
+    // Add links for show/hide all
+    const resulttable = find('table#results-table');
+    const showhideall = document.createElement('p');
+    showhideall.innerHTML = '<a href="javascript:showAllExtras()">Show all details</a> / ' +
+                            '<a href="javascript:hideAllExtras()">Hide all details</a>';
+    resulttable.parentElement.insertBefore(showhideall, resulttable);
+
+    // Add show/hide link to each result
+    findAll('.col-result').forEach(function(elem) {
+        const collapsed = getQueryParameter('collapsed') || 'Passed';
+        const extras = elem.parentNode.nextElementSibling;
+        const expandcollapse = document.createElement('span');
+        if (extras.classList.contains('collapsed')) {
+            expandcollapse.classList.add('expander');
+        } else if (collapsed.includes(elem.innerHTML)) {
+            extras.classList.add('collapsed');
+            expandcollapse.classList.add('expander');
+        } else {
+            expandcollapse.classList.add('collapser');
+        }
+        elem.appendChild(expandcollapse);
+
+        elem.addEventListener('click', function(event) {
+            if (event.currentTarget.parentNode.nextElementSibling.classList.contains('collapsed')) {
+                showExtras(event.currentTarget);
+            } else {
+                hideExtras(event.currentTarget);
+            }
+        });
+    });
+}
+
+function getQueryParameter(name) {
+    const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function init () { // eslint-disable-line no-unused-vars
+    resetSortHeaders();
+
+    addCollapse();
+
+    showFilters();
+
+    sortColumn(find('.initial-sort'));
+
+    findAll('.sortable').forEach(function(elem) {
+        elem.addEventListener('click',
+            function() {
+                sortColumn(elem);
+            }, false);
+    });
+}
+
+function sortTable(clicked, keyFunc) {
+    const rows = findAll('.results-table-row');
+    const reversed = !clicked.classList.contains('asc');
+    const sortedRows = sort(rows, keyFunc, reversed);
+    /* Whole table is removed here because browsers acts much slower
+     * when appending existing elements.
+     */
+    const thead = document.getElementById('results-table-head');
+    document.getElementById('results-table').remove();
+    const parent = document.createElement('table');
+    parent.id = 'results-table';
+    parent.appendChild(thead);
+    sortedRows.forEach(function(elem) {
+        parent.appendChild(elem);
+    });
+    document.getElementsByTagName('BODY')[0].appendChild(parent);
+}
+
+function sort(items, keyFunc, reversed) {
+    const sortArray = items.map(function(item, i) {
+        return [keyFunc(item), i];
+    });
+
+    sortArray.sort(function(a, b) {
+        const keyA = a[0];
+        const keyB = b[0];
+
+        if (keyA == keyB) return 0;
+
+        if (reversed) {
+            return keyA < keyB ? 1 : -1;
+        } else {
+            return keyA > keyB ? 1 : -1;
+        }
+    });
+
+    return sortArray.map(function(item) {
+        const index = item[1];
+        return items[index];
+    });
+}
+
+function keyAlpha(colIndex) {
+    return function(elem) {
+        return elem.childNodes[1].childNodes[colIndex].firstChild.data.toLowerCase();
+    };
+}
+
+function keyLink(colIndex) {
+    return function(elem) {
+        const dataCell = elem.childNodes[1].childNodes[colIndex].firstChild;
+        return dataCell == null ? '' : dataCell.innerText.toLowerCase();
+    };
+}
+
+function keyResult(colIndex) {
+    return function(elem) {
+        const strings = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed',
+            'Skipped', 'Passed'];
+        return strings.indexOf(elem.childNodes[1].childNodes[colIndex].firstChild.data);
+    };
+}
+
+function resetSortHeaders() {
+    findAll('.sort-icon').forEach(function(elem) {
+        elem.parentNode.removeChild(elem);
+    });
+    findAll('.sortable').forEach(function(elem) {
+        const icon = document.createElement('div');
+        icon.className = 'sort-icon';
+        icon.textContent = 'vvv';
+        elem.insertBefore(icon, elem.firstChild);
+        elem.classList.remove('desc', 'active');
+        elem.classList.add('asc', 'inactive');
+    });
+}
+
+function toggleSortStates(elem) {
+    //if active, toggle between asc and desc
+    if (elem.classList.contains('active')) {
+        elem.classList.toggle('asc');
+        elem.classList.toggle('desc');
+    }
+
+    //if inactive, reset all other functions and add ascending active
+    if (elem.classList.contains('inactive')) {
+        resetSortHeaders();
+        elem.classList.remove('inactive');
+        elem.classList.add('active');
+    }
+}
+
+function isAllRowsHidden(value) {
+    return value.hidden == false;
+}
+
+function filterTable(elem) { // eslint-disable-line no-unused-vars
+    const outcomeAtt = 'data-test-result';
+    const outcome = elem.getAttribute(outcomeAtt);
+    const classOutcome = outcome + ' results-table-row';
+    const outcomeRows = document.getElementsByClassName(classOutcome);
+
+    for(let i = 0; i < outcomeRows.length; i++){
+        outcomeRows[i].hidden = !elem.checked;
+    }
+
+    const rows = findAll('.results-table-row').filter(isAllRowsHidden);
+    const allRowsHidden = rows.length == 0 ? true : false;
+    const notFoundMessage = document.getElementById('not-found-message');
+    notFoundMessage.hidden = !allRowsHidden;
+}
+</script>
+    <h1>DFO_Reporting_Regression_Test_Suite_Execution_Report_23.2.3.html</h1>
+    <p>Report generated on 03-Aug-2023 at 16:31:47 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.2.0</p>
+    <h2>Environment</h2>
+    <table id="environment">
+      <tr>
+        <td>Base URL</td>
+        <td></td></tr>
+      <tr>
+        <td>JAVA_HOME</td>
+        <td>C:\Program Files\Java\jdk-17</td></tr>
+      <tr>
+        <td>Packages</td>
+        <td>{"pluggy": "1.0.0", "pytest": "7.2.0"}</td></tr>
+      <tr>
+        <td>Platform</td>
+        <td>Windows-10-10.0.22621-SP0</td></tr>
+      <tr>
+        <td>Plugins</td>
+        <td>{"allure-pytest": "2.13.2", "base-url": "2.0.0", "html": "3.2.0", "html-reporter": "0.2.9", "metadata": "2.0.4", "playwright": "0.3.0"}</td></tr>
+      <tr>
+        <td>Python</td>
+        <td>3.11.1</td></tr></table>
+    <h2>Summary</h2>
+    <p>74 tests ran in 504.98 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">74 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <h2>Results</h2>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable result initial-sort" col="result">Result</th>
+          <th class="sortable" col="name">Test</th>
+          <th class="sortable" col="duration">Duration</th>
+          <th class="sortable links" col="links">Links</th></tr>
+        <tr hidden="true" id="not-found-message">
+          <th colspan="4">No results found. Try to check the filters</th></tr></thead>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_structured_visit_event_table_schema_validation</td>
+          <td class="col-duration">2.02</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:27,128-53:  Execution Started On: staging Environment
+2023-08-03 16:23:27,129-58:  Execution Query: Describe Table &quot;DATAHUB&quot;.&quot;DFO_STRUCTURED&quot;.&quot;VISIT_EVENT&quot;
+2023-08-03 16:23:29,136-280:  Schema validation is successful for VISIT_EVENT
+2023-08-03 16:23:29,136-284:                                tgt_name          tgt_type tgt_null
+0                             EVENT_ID       VARCHAR(36)        Y
+1                         EVENT_OBJECT       VARCHAR(20)        Y
+2                           EVENT_TYPE       VARCHAR(30)        Y
+3                           CREATED_AT  TIMESTAMP_LTZ(6)        Y
+4         CREATED_AT_WITH_MILLISECONDS  TIMESTAMP_LTZ(6)        Y
+5                           VISITOR_ID       VARCHAR(36)        Y
+6                          VISITOR_KEY      NUMBER(38,0)        Y
+7      VISITOR_CUSTOMER_IDENTITY_COMBO      VARCHAR(256)        Y
+8                     CUSTOMER_ADDRESS      VARCHAR(256)        Y
+9                         CHANNEL_CODE       VARCHAR(50)        Y
+10                 CUSTOMER_FIRST_NAME       VARCHAR(50)        Y
+11                  CUSTOMER_LAST_NAME       VARCHAR(50)        Y
+12                  CUSTOMER_NICK_NAME       VARCHAR(50)        Y
+13                  CUSTOMER_IMAGE_URL  VARCHAR(2097152)        Y
+14                  CUSTOMER_FULL_NAME      VARCHAR(256)        Y
+15                 VISITOR_DEVICE_TYPE       VARCHAR(20)        Y
+16            VISITOR_APPLICATION_TYPE       VARCHAR(20)        Y
+17                VISITOR_BROWSER_NAME       VARCHAR(30)        Y
+18             VISITOR_BROWSER_VERSION       VARCHAR(30)        Y
+19                     VISITOR_OS_NAME       VARCHAR(30)        Y
+20                  VISITOR_OS_VERSION       VARCHAR(30)        Y
+21            VISITOR_BROWSER_LANGUAGE       VARCHAR(30)        Y
+22                  VISITOR_IP_ADDRESS       VARCHAR(20)        Y
+23               VISITOR_LOCATION_NAME      VARCHAR(100)        Y
+24                VISITOR_COUNTRY_NAME      VARCHAR(100)        Y
+25            VISITOR_CUSTOM_VARIABLES           VARIANT        Y
+26                        VISITOR_TAGS             ARRAY        Y
+27                            VISIT_ID       VARCHAR(36)        Y
+28                           VISIT_KEY      NUMBER(38,0)        Y
+29                      VISIT_EVENT_ID       VARCHAR(36)        Y
+30                  VISIT_ACTIVITY_KEY      NUMBER(38,0)        Y
+31                    VISIT_EVENT_TYPE       VARCHAR(30)        Y
+32                    VISIT_VISITOR_ID       VARCHAR(36)        Y
+33                   VISIT_VISITOR_KEY      NUMBER(38,0)        Y
+34  VISIT_CREATED_AT_WITH_MILLISECONDS  TIMESTAMP_LTZ(6)        Y
+35                VISIT_DESTINATION_ID       VARCHAR(36)        Y
+36       VISIT_CUSTOMER_IDENTITY_COMBO      VARCHAR(256)        Y
+37                  VISIT_REFERRER_URL  VARCHAR(2097152)        Y
+38        VISIT_REFERRER_SEARCH_ENGINE       VARCHAR(30)        Y
+39               VISIT_UTM_SOURCE_NAME      VARCHAR(250)        Y
+40               VISIT_UTM_MEDIUM_NAME      VARCHAR(100)        Y
+41             VISIT_UTM_CAMPAIGN_NAME      VARCHAR(256)        Y
+42                 VISIT_UTM_TERM_NAME      VARCHAR(500)        Y
+43              VISIT_UTM_CONTENT_TEXT  VARCHAR(2097152)        Y
+44              VISIT_CUSTOM_VARIABLES           VARIANT        Y
+45                            BRAND_ID      NUMBER(38,0)        Y
+46                              BUS_NO      NUMBER(38,0)        Y
+47                          _TENANT_ID       VARCHAR(36)        Y
+48                           _RAW_DATA           VARIANT        Y
+49                          _FILE_NAME      VARCHAR(256)        Y
+50                  _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+51                 _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visitor_dim_table_schema_validation</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:29,505-280:  Schema validation is successful for VISITOR_DIM
+2023-08-03 16:23:29,505-284:                           tgt_name          tgt_type tgt_null
+0                     VISITOR_KEY      NUMBER(38,0)        N
+1                      VISITOR_ID       VARCHAR(36)        N
+2             VISITOR_DEVICE_TYPE       VARCHAR(20)        Y
+3   VISITOR_APPLICATION_TYPE_NAME       VARCHAR(20)        Y
+4            VISITOR_BROWSER_NAME       VARCHAR(30)        Y
+5         VISITOR_BROWSER_VERSION       VARCHAR(30)        Y
+6        VISITOR_BROWSER_LANGUAGE       VARCHAR(30)        Y
+7                 VISITOR_OS_NAME       VARCHAR(30)        Y
+8              VISITOR_OS_VERSION       VARCHAR(30)        Y
+9              VISITOR_IP_ADDRESS       VARCHAR(20)        Y
+10          VISITOR_LOCATION_NAME      VARCHAR(100)        Y
+11           VISITOR_COUNTRY_NAME      VARCHAR(100)        Y
+12              CREATED_TIMESTAMP  TIMESTAMP_LTZ(6)        Y
+13                     _TENANT_ID       VARCHAR(36)        Y
+14             _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+15            _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visit_conversion_fact_table_schema_validation</td>
+          <td class="col-duration">0.33</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:29,840-280:  Schema validation is successful for VISIT_CONVERSION_FACT
+2023-08-03 16:23:29,841-284:                 tgt_name          tgt_type tgt_null
+0  VISIT_CONVERSION_KEY      NUMBER(38,0)        N
+1             VISIT_KEY      NUMBER(38,0)        N
+2              VISIT_ID       VARCHAR(36)        N
+3  CONVERSION_TYPE_NAME       VARCHAR(35)        N
+4  CONVERSION_TIMESTAMP  TIMESTAMP_LTZ(3)        N
+5     CONVERSION_AMOUNT      NUMBER(38,0)        Y
+6    CONVERSION_SECONDS      NUMBER(38,3)        Y
+7            _TENANT_ID       VARCHAR(36)        Y
+8    _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+9   _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visitor_tag_table_schema_validation</td>
+          <td class="col-duration">0.34</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:30,181-280:  Schema validation is successful for VISITOR_TAG
+2023-08-03 16:23:30,181-284:                tgt_name          tgt_type tgt_null
+0          VISITOR_KEY      NUMBER(38,0)        N
+1               TAG_NO      NUMBER(38,0)        N
+2           TAG_STATUS       VARCHAR(10)        N
+3    CREATED_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+4      ADDED_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+5    REMOVED_TIMESTAMP  TIMESTAMP_LTZ(6)        Y
+6           _TENANT_ID       VARCHAR(36)        Y
+7   _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+8  _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visit_activity_fact_table_schema_validation</td>
+          <td class="col-duration">0.61</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:30,799-280:  Schema validation is successful for VISIT_ACTIVITY_FACT
+2023-08-03 16:23:30,799-284:                            tgt_name          tgt_type tgt_null
+0               VISIT_ACTIVITY_KEY      NUMBER(38,0)        N
+1              VISITOR_ACTIVITY_ID       VARCHAR(36)        N
+2                        VISIT_KEY      NUMBER(38,0)        N
+3                         VISIT_ID       VARCHAR(36)        N
+4                      VISITOR_KEY      NUMBER(38,0)        N
+5                       VISITOR_ID       VARCHAR(36)        N
+6   VISIT_ACTIVITY_START_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+7         VISIT_ACTIVITY_TYPE_NAME       VARCHAR(35)        N
+8             VISIT_DESTINATION_ID       VARCHAR(36)        Y
+9              PROACTIVE_ACTION_ID       VARCHAR(36)        Y
+10           PROACTIVE_ACTION_NAME      VARCHAR(100)        Y
+11      PROACTIVE_ACTION_TYPE_NAME       VARCHAR(35)        Y
+12           PROACTIVE_WORKFLOW_ID       VARCHAR(36)        Y
+13         PROACTIVE_WORKFLOW_NAME      VARCHAR(100)        Y
+14                 PAGE_VIEWED_URL  VARCHAR(2097152)        Y
+15               PAGE_VIEWED_TITLE      VARCHAR(500)        Y
+16             PAGE_VIEWED_SECONDS      NUMBER(38,3)        Y
+17       KNOWLEDGE_BASE_ARTICLE_ID      NUMBER(38,0)        Y
+18      KNOWLEDGE_BASE_ARTICLE_URL  VARCHAR(2097152)        Y
+19    KNOWLEDGE_BASE_ARTICLE_TITLE      VARCHAR(500)        Y
+20                      _TENANT_ID       VARCHAR(36)        Y
+21              _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+22             _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visit_fact_table_schema_validation</td>
+          <td class="col-duration">0.34</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:31,150-280:  Schema validation is successful for VISIT_FACT
+2023-08-03 16:23:31,151-284:                                 tgt_name          tgt_type tgt_null
+0                             VISIT_KEY      NUMBER(38,0)        N
+1                              VISIT_ID       VARCHAR(36)        N
+2                           VISITOR_KEY      NUMBER(38,0)        N
+3                 VISIT_START_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+4                    VISIT_REFERRER_URL  VARCHAR(2097152)        Y
+5          VISIT_REFERRER_SEARCH_ENGINE       VARCHAR(30)        Y
+6                 VISIT_UTM_SOURCE_NAME      VARCHAR(250)        Y
+7                 VISIT_UTM_MEDIUM_NAME      VARCHAR(100)        Y
+8               VISIT_UTM_CAMPAIGN_NAME      VARCHAR(256)        Y
+9                   VISIT_UTM_TERM_NAME      VARCHAR(500)        Y
+10               VISIT_UTM_CONTENT_TEXT  VARCHAR(2097152)        Y
+11                    CHAT_OPENED_COUNT      NUMBER(38,0)        Y
+12  KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT      NUMBER(38,0)        Y
+13            PROACTIVE_DISPLAYED_COUNT      NUMBER(38,0)        Y
+14              PROACTIVE_CLICKED_COUNT      NUMBER(38,0)        Y
+15              PROACTIVE_SUCCESS_COUNT      NUMBER(38,0)        Y
+16               PROACTIVE_FAILED_COUNT      NUMBER(38,0)        Y
+17                    PAGE_VIEWED_COUNT      NUMBER(38,0)        Y
+18                  PAGE_VIEWED_SECONDS      NUMBER(38,3)        Y
+19                     CONVERSION_COUNT      NUMBER(38,0)        N
+20                    CONVERSION_AMOUNT      NUMBER(38,0)        N
+21                   CONVERSION_SECONDS      NUMBER(38,3)        N
+22                           _TENANT_ID       VARCHAR(36)        Y
+23                   _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+24                  _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visitor_dim_view_v001_schema_validation</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:31,501-280:  Schema validation is successful for VISITOR_DIM_VIEW_V001
+2023-08-03 16:23:31,501-284:                           tgt_name          tgt_type tgt_null
+0                     VISITOR_KEY      NUMBER(38,0)        N
+1                      VISITOR_ID       VARCHAR(36)        N
+2             VISITOR_DEVICE_TYPE       VARCHAR(20)        Y
+3   VISITOR_APPLICATION_TYPE_NAME       VARCHAR(20)        Y
+4            VISITOR_BROWSER_NAME       VARCHAR(30)        Y
+5         VISITOR_BROWSER_VERSION       VARCHAR(30)        Y
+6        VISITOR_BROWSER_LANGUAGE       VARCHAR(30)        Y
+7                 VISITOR_OS_NAME       VARCHAR(30)        Y
+8              VISITOR_OS_VERSION       VARCHAR(30)        Y
+9              VISITOR_IP_ADDRESS       VARCHAR(20)        Y
+10          VISITOR_LOCATION_NAME      VARCHAR(100)        Y
+11           VISITOR_COUNTRY_NAME      VARCHAR(100)        Y
+12              CREATED_TIMESTAMP  TIMESTAMP_LTZ(6)        Y
+13                     _TENANT_ID       VARCHAR(36)        Y
+14             _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+15            _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visitor_tag_view_v001_schema_validation</td>
+          <td class="col-duration">0.37</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:31,881-280:  Schema validation is successful for VISITOR_TAG_VIEW_V001
+2023-08-03 16:23:31,881-284:                tgt_name          tgt_type tgt_null
+0          VISITOR_KEY      NUMBER(38,0)        N
+1               TAG_NO      NUMBER(38,0)        N
+2           TAG_STATUS       VARCHAR(10)        N
+3    CREATED_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+4      ADDED_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+5    REMOVED_TIMESTAMP  TIMESTAMP_LTZ(6)        Y
+6           _TENANT_ID       VARCHAR(36)        Y
+7   _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+8  _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visit_conversion_fact_view_v001_schema_validation</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:32,234-280:  Schema validation is successful for VISIT_CONVERSION_FACT_VIEW_V001
+2023-08-03 16:23:32,234-284:                 tgt_name          tgt_type tgt_null
+0  VISIT_CONVERSION_KEY      NUMBER(38,0)        N
+1             VISIT_KEY      NUMBER(38,0)        N
+2              VISIT_ID       VARCHAR(36)        N
+3  CONVERSION_TYPE_NAME       VARCHAR(35)        N
+4  CONVERSION_TIMESTAMP  TIMESTAMP_LTZ(3)        N
+5     CONVERSION_AMOUNT      NUMBER(38,0)        Y
+6    CONVERSION_SECONDS      NUMBER(38,3)        Y
+7            _TENANT_ID       VARCHAR(36)        Y
+8    _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+9   _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visit_activity_fact_view_v001_schema_validation</td>
+          <td class="col-duration">0.33</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:32,568-280:  Schema validation is successful for VISIT_ACTIVITY_FACT_VIEW_V001
+2023-08-03 16:23:32,568-284:                            tgt_name          tgt_type tgt_null
+0               VISIT_ACTIVITY_KEY      NUMBER(38,0)        N
+1              VISITOR_ACTIVITY_ID       VARCHAR(36)        N
+2                        VISIT_KEY      NUMBER(38,0)        N
+3                         VISIT_ID       VARCHAR(36)        N
+4                      VISITOR_KEY      NUMBER(38,0)        N
+5                       VISITOR_ID       VARCHAR(36)        N
+6   VISIT_ACTIVITY_START_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+7         VISIT_ACTIVITY_TYPE_NAME       VARCHAR(35)        N
+8             VISIT_DESTINATION_ID       VARCHAR(36)        Y
+9              PROACTIVE_ACTION_ID       VARCHAR(36)        Y
+10           PROACTIVE_ACTION_NAME      VARCHAR(100)        Y
+11      PROACTIVE_ACTION_TYPE_NAME       VARCHAR(35)        Y
+12           PROACTIVE_WORKFLOW_ID       VARCHAR(36)        Y
+13         PROACTIVE_WORKFLOW_NAME      VARCHAR(100)        Y
+14                 PAGE_VIEWED_URL  VARCHAR(2097152)        Y
+15               PAGE_VIEWED_TITLE      VARCHAR(500)        Y
+16             PAGE_VIEWED_SECONDS      NUMBER(38,3)        Y
+17       KNOWLEDGE_BASE_ARTICLE_ID      NUMBER(38,0)        Y
+18      KNOWLEDGE_BASE_ARTICLE_URL  VARCHAR(2097152)        Y
+19    KNOWLEDGE_BASE_ARTICLE_TITLE      VARCHAR(500)        Y
+20                      _TENANT_ID       VARCHAR(36)        Y
+21              _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+22             _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visit_fact_view_v001_schema_validation</td>
+          <td class="col-duration">0.34</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:32,917-280:  Schema validation is successful for VISIT_FACT_VIEW_V001
+2023-08-03 16:23:32,917-284:                                 tgt_name          tgt_type tgt_null
+0                             VISIT_KEY      NUMBER(38,0)        N
+1                              VISIT_ID       VARCHAR(36)        N
+2                           VISITOR_KEY      NUMBER(38,0)        N
+3                 VISIT_START_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+4                    VISIT_REFERRER_URL  VARCHAR(2097152)        Y
+5          VISIT_REFERRER_SEARCH_ENGINE       VARCHAR(30)        Y
+6                 VISIT_UTM_SOURCE_NAME      VARCHAR(250)        Y
+7                 VISIT_UTM_MEDIUM_NAME      VARCHAR(100)        Y
+8               VISIT_UTM_CAMPAIGN_NAME      VARCHAR(256)        Y
+9                   VISIT_UTM_TERM_NAME      VARCHAR(500)        Y
+10               VISIT_UTM_CONTENT_TEXT  VARCHAR(2097152)        Y
+11                    CHAT_OPENED_COUNT      NUMBER(38,0)        Y
+12  KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT      NUMBER(38,0)        Y
+13            PROACTIVE_DISPLAYED_COUNT      NUMBER(38,0)        Y
+14              PROACTIVE_CLICKED_COUNT      NUMBER(38,0)        Y
+15              PROACTIVE_SUCCESS_COUNT      NUMBER(38,0)        Y
+16               PROACTIVE_FAILED_COUNT      NUMBER(38,0)        Y
+17                    PAGE_VIEWED_COUNT      NUMBER(38,0)        Y
+18                  PAGE_VIEWED_SECONDS      NUMBER(38,3)        Y
+19                     CONVERSION_COUNT      NUMBER(38,0)        N
+20                    CONVERSION_AMOUNT      NUMBER(38,0)        N
+21                   CONVERSION_SECONDS      NUMBER(38,3)        N
+22                           _TENANT_ID       VARCHAR(36)        Y
+23                   _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+24                  _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visitor_dim_view_v001_record_validation</td>
+          <td class="col-duration">1.07</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISITOR_DIM_VIEW_V001 table
+2023-08-03 16:23:34,000-216:  Validation Passed, all records are added successfully in the VISITOR_DIM_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visit_conversion_fact_view_v001_record_validation</td>
+          <td class="col-duration">4.94</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISIT_CONVERSION_FACT_VIEW_V001 table
+2023-08-03 16:23:38,949-216:  Validation Passed, all records are added successfully in the VISIT_CONVERSION_FACT_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visitor_tag_view_v001_record_validation</td>
+          <td class="col-duration">0.60</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISITOR_TAG_VIEW_V001 table
+2023-08-03 16:23:39,554-216:  Validation Passed, all records are added successfully in the VISITOR_TAG_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visit_fact_view_v001_record_validation</td>
+          <td class="col-duration">0.56</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISIT_FACT_VIEW_V001 table
+2023-08-03 16:23:40,122-216:  Validation Passed, all records are added successfully in the VISIT_FACT_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_refined_visit_activity_fact_view_v001_record_validation</td>
+          <td class="col-duration">0.91</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISIT_ACTIVITY_FACT_VIEW_V001 table
+2023-08-03 16:23:41,034-216:  Validation Passed, all records are added successfully in the VISIT_ACTIVITY_FACT_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visitor_dim_view_v001_schema_validation</td>
+          <td class="col-duration">0.34</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:41,381-280:  Schema validation is successful for VISITOR_DIM_VIEW_V001
+2023-08-03 16:23:41,381-284:                           tgt_name          tgt_type tgt_null
+0                     VISITOR_KEY      NUMBER(38,0)        N
+1                      VISITOR_ID       VARCHAR(36)        N
+2             VISITOR_DEVICE_TYPE       VARCHAR(20)        Y
+3   VISITOR_APPLICATION_TYPE_NAME       VARCHAR(20)        Y
+4            VISITOR_BROWSER_NAME       VARCHAR(30)        Y
+5         VISITOR_BROWSER_VERSION       VARCHAR(30)        Y
+6        VISITOR_BROWSER_LANGUAGE       VARCHAR(30)        Y
+7                 VISITOR_OS_NAME       VARCHAR(30)        Y
+8              VISITOR_OS_VERSION       VARCHAR(30)        Y
+9              VISITOR_IP_ADDRESS       VARCHAR(20)        Y
+10          VISITOR_LOCATION_NAME      VARCHAR(100)        Y
+11           VISITOR_COUNTRY_NAME      VARCHAR(100)        Y
+12              CREATED_TIMESTAMP  TIMESTAMP_LTZ(6)        Y
+13                     _TENANT_ID       VARCHAR(36)        Y
+14             _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+15            _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visit_conversion_fact_view_v001_schema_validation</td>
+          <td class="col-duration">0.34</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:41,726-280:  Schema validation is successful for VISIT_CONVERSION_FACT_VIEW_V001
+2023-08-03 16:23:41,726-284:                 tgt_name          tgt_type tgt_null
+0  VISIT_CONVERSION_KEY      NUMBER(38,0)        N
+1             VISIT_KEY      NUMBER(38,0)        N
+2              VISIT_ID       VARCHAR(36)        N
+3  CONVERSION_TYPE_NAME       VARCHAR(35)        N
+4  CONVERSION_TIMESTAMP  TIMESTAMP_LTZ(3)        N
+5     CONVERSION_AMOUNT      NUMBER(38,0)        Y
+6    CONVERSION_SECONDS      NUMBER(38,3)        Y
+7            _TENANT_ID       VARCHAR(36)        Y
+8    _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+9   _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visitor_tag_view_v001_schema_validation</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:42,082-280:  Schema validation is successful for VISITOR_TAG_VIEW_V001
+2023-08-03 16:23:42,083-284:                tgt_name          tgt_type tgt_null
+0          VISITOR_KEY      NUMBER(38,0)        N
+1               TAG_NO      NUMBER(38,0)        N
+2           TAG_STATUS       VARCHAR(10)        N
+3    CREATED_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+4      ADDED_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+5    REMOVED_TIMESTAMP  TIMESTAMP_LTZ(6)        Y
+6           _TENANT_ID       VARCHAR(36)        Y
+7   _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+8  _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visit_activity_fact_view_v001_schema_validation</td>
+          <td class="col-duration">0.33</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:42,415-280:  Schema validation is successful for VISIT_ACTIVITY_FACT_VIEW_V001
+2023-08-03 16:23:42,416-284:                            tgt_name          tgt_type tgt_null
+0               VISIT_ACTIVITY_KEY      NUMBER(38,0)        N
+1              VISITOR_ACTIVITY_ID       VARCHAR(36)        N
+2                        VISIT_KEY      NUMBER(38,0)        N
+3                         VISIT_ID       VARCHAR(36)        N
+4                      VISITOR_KEY      NUMBER(38,0)        N
+5                       VISITOR_ID       VARCHAR(36)        N
+6   VISIT_ACTIVITY_START_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+7         VISIT_ACTIVITY_TYPE_NAME       VARCHAR(35)        N
+8             VISIT_DESTINATION_ID       VARCHAR(36)        Y
+9              PROACTIVE_ACTION_ID       VARCHAR(36)        Y
+10           PROACTIVE_ACTION_NAME      VARCHAR(100)        Y
+11      PROACTIVE_ACTION_TYPE_NAME       VARCHAR(35)        Y
+12           PROACTIVE_WORKFLOW_ID       VARCHAR(36)        Y
+13         PROACTIVE_WORKFLOW_NAME      VARCHAR(100)        Y
+14                 PAGE_VIEWED_URL  VARCHAR(2097152)        Y
+15               PAGE_VIEWED_TITLE      VARCHAR(500)        Y
+16             PAGE_VIEWED_SECONDS      NUMBER(38,3)        Y
+17       KNOWLEDGE_BASE_ARTICLE_ID      NUMBER(38,0)        Y
+18      KNOWLEDGE_BASE_ARTICLE_URL  VARCHAR(2097152)        Y
+19    KNOWLEDGE_BASE_ARTICLE_TITLE      VARCHAR(500)        Y
+20                      _TENANT_ID       VARCHAR(36)        Y
+21              _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+22             _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visit_fact_view_v001_schema_validation</td>
+          <td class="col-duration">0.41</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:23:42,827-280:  Schema validation is successful for VISIT_FACT_VIEW_V001
+2023-08-03 16:23:42,828-284:                                 tgt_name          tgt_type tgt_null
+0                              VISIT_ID       VARCHAR(36)        N
+1                             VISIT_KEY      NUMBER(38,0)        N
+2                           VISITOR_KEY      NUMBER(38,0)        N
+3                 VISIT_START_TIMESTAMP  TIMESTAMP_LTZ(6)        N
+4                    VISIT_REFERRER_URL  VARCHAR(2097152)        Y
+5          VISIT_REFERRER_SEARCH_ENGINE       VARCHAR(30)        Y
+6                 VISIT_UTM_SOURCE_NAME      VARCHAR(250)        Y
+7                 VISIT_UTM_MEDIUM_NAME      VARCHAR(100)        Y
+8               VISIT_UTM_CAMPAIGN_NAME      VARCHAR(256)        Y
+9                   VISIT_UTM_TERM_NAME      VARCHAR(500)        Y
+10               VISIT_UTM_CONTENT_TEXT  VARCHAR(2097152)        Y
+11                    CHAT_OPENED_COUNT      NUMBER(38,0)        Y
+12  KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT      NUMBER(38,0)        Y
+13            PROACTIVE_DISPLAYED_COUNT      NUMBER(38,0)        Y
+14              PROACTIVE_CLICKED_COUNT      NUMBER(38,0)        Y
+15              PROACTIVE_SUCCESS_COUNT      NUMBER(38,0)        Y
+16               PROACTIVE_FAILED_COUNT      NUMBER(38,0)        Y
+17                    PAGE_VIEWED_COUNT      NUMBER(38,0)        Y
+18                  PAGE_VIEWED_SECONDS      NUMBER(38,3)        Y
+19                     CONVERSION_COUNT      NUMBER(38,0)        N
+20                    CONVERSION_AMOUNT      NUMBER(38,0)        N
+21                   CONVERSION_SECONDS      NUMBER(38,3)        N
+22                           _TENANT_ID       VARCHAR(36)        Y
+23                   _CREATED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+24                  _MODIFIED_TIMESTAMP  TIMESTAMP_LTZ(9)        Y
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visitor_dim_view_v001_record_validation</td>
+          <td class="col-duration">0.48</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISITOR_DIM_VIEW_V001 table
+2023-08-03 16:23:43,311-216:  Validation Passed, all records are added successfully in the VISITOR_DIM_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visit_conversion_fact_view_v001_record_validation</td>
+          <td class="col-duration">0.33</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISIT_CONVERSION_FACT_VIEW_V001 table
+2023-08-03 16:23:43,646-216:  Validation Passed, all records are added successfully in the VISIT_CONVERSION_FACT_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visitor_tag_view_v001_record_validation</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISITOR_TAG_VIEW_V001 table
+2023-08-03 16:23:44,002-216:  Validation Passed, all records are added successfully in the VISITOR_TAG_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visit_activity_fact_view_v001_record_validation</td>
+          <td class="col-duration">0.49</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISIT_ACTIVITY_FACT_VIEW_V001 table
+2023-08-03 16:23:44,493-216:  Validation Passed, all records are added successfully in the VISIT_ACTIVITY_FACT_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_suite_visit_fact_view_v001_record_validation</td>
+          <td class="col-duration">0.39</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+Objective - Validation of records count for the VISIT_FACT_VIEW_V001 table
+2023-08-03 16:23:44,887-216:  Validation Passed, all records are added successfully in the VISIT_FACT_VIEW_V001 table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_browser_name_records_validation_01</td>
+          <td class="col-duration">3.51</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:44,890-71:  Objective - Validation of the VISITOR_BROWSER_NAME field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:48,399-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:48,399-89:  Total records identified for VISITOR_BROWSER_NAME field of VISITOR_DIM table: 2325
+2023-08-03 16:23:48,400-92:  Passed records identified for VISITOR_BROWSER_NAME field of VISITOR_DIM table:  2325
+2023-08-03 16:23:48,400-95:  Failed records identified for VISITOR_BROWSER_NAME field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_browser_version_records_validation_02</td>
+          <td class="col-duration">1.38</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:48,402-71:  Objective - Validation of the VISITOR_BROWSER_VERSION field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:49,788-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:49,788-89:  Total records identified for VISITOR_BROWSER_VERSION field of VISITOR_DIM table: 2325
+2023-08-03 16:23:49,788-92:  Passed records identified for VISITOR_BROWSER_VERSION field of VISITOR_DIM table:  2325
+2023-08-03 16:23:49,788-95:  Failed records identified for VISITOR_BROWSER_VERSION field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_browser_lang_records_validation_03</td>
+          <td class="col-duration">1.13</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:49,790-71:  Objective - Validation of the VISITOR_BROWSER_LANGUAGE field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:50,922-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:50,923-89:  Total records identified for VISITOR_BROWSER_LANGUAGE field of VISITOR_DIM table: 2325
+2023-08-03 16:23:50,923-92:  Passed records identified for VISITOR_BROWSER_LANGUAGE field of VISITOR_DIM table:  2325
+2023-08-03 16:23:50,923-95:  Failed records identified for VISITOR_BROWSER_LANGUAGE field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_device_type_records_validation_04</td>
+          <td class="col-duration">0.94</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:50,925-71:  Objective - Validation of the VISITOR_DEVICE_TYPE field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:51,870-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:51,870-89:  Total records identified for VISITOR_DEVICE_TYPE field of VISITOR_DIM table: 2325
+2023-08-03 16:23:51,871-92:  Passed records identified for VISITOR_DEVICE_TYPE field of VISITOR_DIM table:  2325
+2023-08-03 16:23:51,871-95:  Failed records identified for VISITOR_DEVICE_TYPE field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_device_type_records_validation_05</td>
+          <td class="col-duration">0.89</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:51,873-71:  Objective - Validation of the VISITOR_APPLICATION_TYPE_NAME field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:52,770-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:52,770-89:  Total records identified for VISITOR_APPLICATION_TYPE_NAME field of VISITOR_DIM table: 2325
+2023-08-03 16:23:52,770-92:  Passed records identified for VISITOR_APPLICATION_TYPE_NAME field of VISITOR_DIM table:  2325
+2023-08-03 16:23:52,770-95:  Failed records identified for VISITOR_APPLICATION_TYPE_NAME field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_OS_name_records_validation_06</td>
+          <td class="col-duration">1.03</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:52,773-71:  Objective - Validation of the VISITOR_OS_NAME field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:53,804-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:53,804-89:  Total records identified for VISITOR_OS_NAME field of VISITOR_DIM table: 2325
+2023-08-03 16:23:53,805-92:  Passed records identified for VISITOR_OS_NAME field of VISITOR_DIM table:  2325
+2023-08-03 16:23:53,805-95:  Failed records identified for VISITOR_OS_NAME field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_OS_version_records_validation_07</td>
+          <td class="col-duration">1.03</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:53,808-71:  Objective - Validation of the VISITOR_OS_VERSION field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:54,840-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:54,840-89:  Total records identified for VISITOR_OS_VERSION field of VISITOR_DIM table: 2325
+2023-08-03 16:23:54,840-92:  Passed records identified for VISITOR_OS_VERSION field of VISITOR_DIM table:  2325
+2023-08-03 16:23:54,840-95:  Failed records identified for VISITOR_OS_VERSION field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_address_records_validation_08</td>
+          <td class="col-duration">1.07</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:54,842-71:  Objective - Validation of the VISITOR_IP_ADDRESS field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:55,918-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:55,918-89:  Total records identified for VISITOR_IP_ADDRESS field of VISITOR_DIM table: 2325
+2023-08-03 16:23:55,918-92:  Passed records identified for VISITOR_IP_ADDRESS field of VISITOR_DIM table:  2325
+2023-08-03 16:23:55,918-95:  Failed records identified for VISITOR_IP_ADDRESS field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_location_records_validation_09</td>
+          <td class="col-duration">0.92</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:55,920-71:  Objective - Validation of the VISITOR_LOCATION_NAME field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:56,841-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:56,842-89:  Total records identified for VISITOR_LOCATION_NAME field of VISITOR_DIM table: 2325
+2023-08-03 16:23:56,842-92:  Passed records identified for VISITOR_LOCATION_NAME field of VISITOR_DIM table:  2325
+2023-08-03 16:23:56,842-95:  Failed records identified for VISITOR_LOCATION_NAME field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_country_records_validation_10</td>
+          <td class="col-duration">0.92</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:56,844-71:  Objective - Validation of the VISITOR_COUNTRY_NAME field of the VISITOR_DIM table with respect to source
+2023-08-03 16:23:57,766-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:23:57,766-89:  Total records identified for VISITOR_COUNTRY_NAME field of VISITOR_DIM table: 2325
+2023-08-03 16:23:57,766-92:  Passed records identified for VISITOR_COUNTRY_NAME field of VISITOR_DIM table:  2325
+2023-08-03 16:23:57,766-95:  Failed records identified for VISITOR_COUNTRY_NAME field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_createdtimestamp_validation_11</td>
+          <td class="col-duration">17.73</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:23:57,768-71:  Objective - Validation of the CREATED_TIMESTAMP field of the VISITOR_DIM table with respect to source
+2023-08-03 16:24:15,502-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:24:15,502-89:  Total records identified for CREATED_TIMESTAMP field of VISITOR_DIM table: 2325
+2023-08-03 16:24:15,502-92:  Passed records identified for CREATED_TIMESTAMP field of VISITOR_DIM table:  2325
+2023-08-03 16:24:15,502-95:  Failed records identified for CREATED_TIMESTAMP field of VISITOR_DIM table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_duplicate_record_validation_12</td>
+          <td class="col-duration">0.44</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:24:15,505-132:  Objective - Validation of duplicate records of the VISITOR_DIM table
+2023-08-03 16:24:15,944-144:  Validation Passed, No Duplicate records in the VISITOR_DIM table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_conversion_type_name_records_validation_01</td>
+          <td class="col-duration">0.70</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:24:15,948-71:  Objective - Validation of the CONVERSION_TYPE_NAME field of the VISIT_CONVERSION_FACT table with respect to source
+2023-08-03 16:24:16,648-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:24:16,648-89:  Total records identified for CONVERSION_TYPE_NAME field of VISIT_CONVERSION_FACT table: 0
+2023-08-03 16:24:16,648-92:  Passed records identified for CONVERSION_TYPE_NAME field of VISIT_CONVERSION_FACT table:  0
+2023-08-03 16:24:16,649-95:  Failed records identified for CONVERSION_TYPE_NAME field of VISIT_CONVERSION_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_conversion_timestamp_records_validation_02</td>
+          <td class="col-duration">0.44</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:24:16,655-71:  Objective - Validation of the CONVERSION_TIMESTAMP field of the VISIT_CONVERSION_FACT table with respect to source
+2023-08-03 16:24:17,100-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:24:17,101-89:  Total records identified for CONVERSION_TIMESTAMP field of VISIT_CONVERSION_FACT table: 0
+2023-08-03 16:24:17,101-92:  Passed records identified for CONVERSION_TIMESTAMP field of VISIT_CONVERSION_FACT table:  0
+2023-08-03 16:24:17,101-95:  Failed records identified for CONVERSION_TIMESTAMP field of VISIT_CONVERSION_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_conversion_amount_records_validation_03</td>
+          <td class="col-duration">0.42</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:24:17,108-71:  Objective - Validation of the CONVERSION_AMOUNT field of the VISIT_CONVERSION_FACT table with respect to source
+2023-08-03 16:24:17,526-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:24:17,526-89:  Total records identified for CONVERSION_AMOUNT field of VISIT_CONVERSION_FACT table: 0
+2023-08-03 16:24:17,527-92:  Passed records identified for CONVERSION_AMOUNT field of VISIT_CONVERSION_FACT table:  0
+2023-08-03 16:24:17,527-95:  Failed records identified for CONVERSION_AMOUNT field of VISIT_CONVERSION_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_conversion_seconds_records_validation_04</td>
+          <td class="col-duration">0.41</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:24:17,532-71:  Objective - Validation of the CONVERSION_SECONDS field of the VISIT_CONVERSION_FACT table with respect to source
+2023-08-03 16:24:17,945-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:24:17,946-89:  Total records identified for CONVERSION_SECONDS field of VISIT_CONVERSION_FACT table: 0
+2023-08-03 16:24:17,946-92:  Passed records identified for CONVERSION_SECONDS field of VISIT_CONVERSION_FACT table:  0
+2023-08-03 16:24:17,946-95:  Failed records identified for CONVERSION_SECONDS field of VISIT_CONVERSION_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_duplicate_visit_id_allowed_record_validation_05</td>
+          <td class="col-duration">0.40</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:24:17,951-132:  Objective - Validation of duplicate records of the VISIT_CONVERSION_FACT table
+2023-08-03 16:24:18,349-144:  Validation Passed, No Duplicate records in the VISIT_CONVERSION_FACT table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visitor_createdtimestamp_validation_01</td>
+          <td class="col-duration">0.32</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:24:18,355-71:  Objective - Validation of the CREATEDTIMESTAMP field of the VISITOR_TAG table with respect to source
+2023-08-03 16:24:18,681-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:24:18,682-89:  Total records identified for CREATEDTIMESTAMP field of VISITOR_TAG table: 0
+2023-08-03 16:24:18,682-92:  Passed records identified for CREATEDTIMESTAMP field of VISITOR_TAG table:  0
+2023-08-03 16:24:18,682-95:  Failed records identified for CREATEDTIMESTAMP field of VISITOR_TAG table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_activity_start_timestamp_records_validation_01</td>
+          <td class="col-duration">407.91</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:24:18,687-71:  Objective - Validation of the VISIT_ACTIVITY_START_TIMESTAMP field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:06,596-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:06,597-89:  Total records identified for VISIT_ACTIVITY_START_TIMESTAMP field of VISIT_ACTIVITY_FACT table: 52476
+2023-08-03 16:31:06,597-92:  Passed records identified for VISIT_ACTIVITY_START_TIMESTAMP field of VISIT_ACTIVITY_FACT table:  52476
+2023-08-03 16:31:06,597-95:  Failed records identified for VISIT_ACTIVITY_START_TIMESTAMP field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_activity_type_name_records_validation_02</td>
+          <td class="col-duration">10.22</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:06,605-71:  Objective - Validation of the VISIT_ACTIVITY_TYPE_NAME field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:16,825-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:16,825-89:  Total records identified for VISIT_ACTIVITY_TYPE_NAME field of VISIT_ACTIVITY_FACT table: 52476
+2023-08-03 16:31:16,825-92:  Passed records identified for VISIT_ACTIVITY_TYPE_NAME field of VISIT_ACTIVITY_FACT table:  52476
+2023-08-03 16:31:16,825-95:  Failed records identified for VISIT_ACTIVITY_TYPE_NAME field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_destination_id_records_validation_03</td>
+          <td class="col-duration">5.64</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:16,834-71:  Objective - Validation of the VISIT_DESTINATION_ID field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:22,474-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:22,474-89:  Total records identified for VISIT_DESTINATION_ID field of VISIT_ACTIVITY_FACT table: 52476
+2023-08-03 16:31:22,474-92:  Passed records identified for VISIT_DESTINATION_ID field of VISIT_ACTIVITY_FACT table:  52476
+2023-08-03 16:31:22,474-95:  Failed records identified for VISIT_DESTINATION_ID field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_proactive_action_id_records_validation_04</td>
+          <td class="col-duration">0.43</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:22,485-71:  Objective - Validation of the PROACTIVE_ACTION_ID field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:22,922-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:22,922-89:  Total records identified for PROACTIVE_ACTION_ID field of VISIT_ACTIVITY_FACT table: 0
+2023-08-03 16:31:22,922-92:  Passed records identified for PROACTIVE_ACTION_ID field of VISIT_ACTIVITY_FACT table:  0
+2023-08-03 16:31:22,923-95:  Failed records identified for PROACTIVE_ACTION_ID field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_proactive_action_name_records_validation_05</td>
+          <td class="col-duration">1.05</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:22,927-71:  Objective - Validation of the PROACTIVE_ACTION_NAME field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:23,980-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:23,980-89:  Total records identified for PROACTIVE_ACTION_NAME field of VISIT_ACTIVITY_FACT table: 0
+2023-08-03 16:31:23,980-92:  Passed records identified for PROACTIVE_ACTION_NAME field of VISIT_ACTIVITY_FACT table:  0
+2023-08-03 16:31:23,980-95:  Failed records identified for PROACTIVE_ACTION_NAME field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_proactive_action_type_name_records_validation_06</td>
+          <td class="col-duration">0.43</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:23,982-71:  Objective - Validation of the PROACTIVE_ACTION_TYPE_NAME field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:24,417-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:24,417-89:  Total records identified for PROACTIVE_ACTION_TYPE_NAME field of VISIT_ACTIVITY_FACT table: 0
+2023-08-03 16:31:24,417-92:  Passed records identified for PROACTIVE_ACTION_TYPE_NAME field of VISIT_ACTIVITY_FACT table:  0
+2023-08-03 16:31:24,417-95:  Failed records identified for PROACTIVE_ACTION_TYPE_NAME field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_proactive_workflow_id_records_validation_07</td>
+          <td class="col-duration">0.42</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:24,421-71:  Objective - Validation of the PROACTIVE_WORKFLOW_ID field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:24,848-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:24,848-89:  Total records identified for PROACTIVE_WORKFLOW_ID field of VISIT_ACTIVITY_FACT table: 0
+2023-08-03 16:31:24,848-92:  Passed records identified for PROACTIVE_WORKFLOW_ID field of VISIT_ACTIVITY_FACT table:  0
+2023-08-03 16:31:24,848-95:  Failed records identified for PROACTIVE_WORKFLOW_ID field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_proactive_workflow_name_records_validation_08</td>
+          <td class="col-duration">0.37</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:24,851-71:  Objective - Validation of the PROACTIVE_WORKFLOW_NAME field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:25,220-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:25,221-89:  Total records identified for PROACTIVE_WORKFLOW_NAME field of VISIT_ACTIVITY_FACT table: 0
+2023-08-03 16:31:25,221-92:  Passed records identified for PROACTIVE_WORKFLOW_NAME field of VISIT_ACTIVITY_FACT table:  0
+2023-08-03 16:31:25,221-95:  Failed records identified for PROACTIVE_WORKFLOW_NAME field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_page_viewed_url_records_validation_09</td>
+          <td class="col-duration">7.23</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:25,223-71:  Objective - Validation of the PAGE_VIEWED_URL field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:32,459-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:32,460-89:  Total records identified for PAGE_VIEWED_URL field of VISIT_ACTIVITY_FACT table: 17100
+2023-08-03 16:31:32,460-92:  Passed records identified for PAGE_VIEWED_URL field of VISIT_ACTIVITY_FACT table:  17100
+2023-08-03 16:31:32,460-95:  Failed records identified for PAGE_VIEWED_URL field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_page_viewed_title_records_validation_10</td>
+          <td class="col-duration">2.25</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:32,464-71:  Objective - Validation of the PAGE_VIEWED_TITLE field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:34,716-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:34,716-89:  Total records identified for PAGE_VIEWED_TITLE field of VISIT_ACTIVITY_FACT table: 17100
+2023-08-03 16:31:34,716-92:  Passed records identified for PAGE_VIEWED_TITLE field of VISIT_ACTIVITY_FACT table:  17100
+2023-08-03 16:31:34,716-95:  Failed records identified for PAGE_VIEWED_TITLE field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_page_viewed_seconds_validation_records_11</td>
+          <td class="col-duration">1.72</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:34,722-71:  Objective - Validation of the PAGE_VIEWED_SECONDS field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:36,446-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:36,446-89:  Total records identified for PAGE_VIEWED_SECONDS field of VISIT_ACTIVITY_FACT table: 14881
+2023-08-03 16:31:36,446-92:  Passed records identified for PAGE_VIEWED_SECONDS field of VISIT_ACTIVITY_FACT table:  14881
+2023-08-03 16:31:36,446-95:  Failed records identified for PAGE_VIEWED_SECONDS field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_knowledge_base_article_id_records_validation_12</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:36,450-71:  Objective - Validation of the KNOWLEDGE_BASE_ARTICLE_ID field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:36,801-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:36,801-89:  Total records identified for KNOWLEDGE_BASE_ARTICLE_ID field of VISIT_ACTIVITY_FACT table: 0
+2023-08-03 16:31:36,801-92:  Passed records identified for KNOWLEDGE_BASE_ARTICLE_ID field of VISIT_ACTIVITY_FACT table:  0
+2023-08-03 16:31:36,802-95:  Failed records identified for KNOWLEDGE_BASE_ARTICLE_ID field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_knowledge_base_article_url_records_validation_13</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:36,805-71:  Objective - Validation of the KNOWLEDGE_BASE_ARTICLE_URL field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:37,156-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:37,157-89:  Total records identified for KNOWLEDGE_BASE_ARTICLE_URL field of VISIT_ACTIVITY_FACT table: 0
+2023-08-03 16:31:37,157-92:  Passed records identified for KNOWLEDGE_BASE_ARTICLE_URL field of VISIT_ACTIVITY_FACT table:  0
+2023-08-03 16:31:37,157-95:  Failed records identified for KNOWLEDGE_BASE_ARTICLE_URL field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_knowledge_base_article_title_records_validation_14</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:37,160-71:  Objective - Validation of the KNOWLEDGE_BASE_ARTICLE_TITLE field of the VISIT_ACTIVITY_FACT table with respect to source
+2023-08-03 16:31:37,509-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:37,509-89:  Total records identified for KNOWLEDGE_BASE_ARTICLE_TITLE field of VISIT_ACTIVITY_FACT table: 0
+2023-08-03 16:31:37,509-92:  Passed records identified for KNOWLEDGE_BASE_ARTICLE_TITLE field of VISIT_ACTIVITY_FACT table:  0
+2023-08-03 16:31:37,510-95:  Failed records identified for KNOWLEDGE_BASE_ARTICLE_TITLE field of VISIT_ACTIVITY_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_duplicate_records_validation_15</td>
+          <td class="col-duration">0.39</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:31:37,513-132:  Objective - Validation of duplicate records of the VISIT_ACTIVITY_FACT table
+2023-08-03 16:31:37,904-144:  Validation Passed, No Duplicate records in the VISIT_ACTIVITY_FACT table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_duplicate_records_validation_01</td>
+          <td class="col-duration">0.55</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>2023-08-03 16:31:37,907-132:  Objective - Validation of duplicate records of the VISIT_FACT table
+2023-08-03 16:31:38,461-144:  Validation Passed, No Duplicate records in the VISIT_FACT table
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_referrer_search_engine_records_validation_02</td>
+          <td class="col-duration">0.63</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:38,464-71:  Objective - Validation of the VISIT_REFERRER_SEARCH_ENGINE field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:39,102-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:39,102-89:  Total records identified for VISIT_REFERRER_SEARCH_ENGINE field of VISIT_FACT table: 2260
+2023-08-03 16:31:39,102-92:  Passed records identified for VISIT_REFERRER_SEARCH_ENGINE field of VISIT_FACT table:  2260
+2023-08-03 16:31:39,102-95:  Failed records identified for VISIT_REFERRER_SEARCH_ENGINE field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_utm_campaign_name_records_validation_05</td>
+          <td class="col-duration">0.45</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:39,104-71:  Objective - Validation of the VISIT_UTM_CAMPAIGN_NAME field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:39,558-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:39,558-89:  Total records identified for VISIT_UTM_CAMPAIGN_NAME field of VISIT_FACT table: 2260
+2023-08-03 16:31:39,558-92:  Passed records identified for VISIT_UTM_CAMPAIGN_NAME field of VISIT_FACT table:  2260
+2023-08-03 16:31:39,558-95:  Failed records identified for VISIT_UTM_CAMPAIGN_NAME field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_utm_context_text_records_validation_06</td>
+          <td class="col-duration">0.46</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:39,560-71:  Objective - Validation of the VISIT_UTM_CONTENT_TEXT field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:40,021-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:40,021-89:  Total records identified for VISIT_UTM_CONTENT_TEXT field of VISIT_FACT table: 2260
+2023-08-03 16:31:40,021-92:  Passed records identified for VISIT_UTM_CONTENT_TEXT field of VISIT_FACT table:  2260
+2023-08-03 16:31:40,021-95:  Failed records identified for VISIT_UTM_CONTENT_TEXT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_utm_medium_name_records_validation_07</td>
+          <td class="col-duration">0.48</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:40,023-71:  Objective - Validation of the VISIT_UTM_MEDIUM_NAME field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:40,503-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:40,503-89:  Total records identified for VISIT_UTM_MEDIUM_NAME field of VISIT_FACT table: 2260
+2023-08-03 16:31:40,503-92:  Passed records identified for VISIT_UTM_MEDIUM_NAME field of VISIT_FACT table:  2260
+2023-08-03 16:31:40,503-95:  Failed records identified for VISIT_UTM_MEDIUM_NAME field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_utm_source_name_records_validation_08</td>
+          <td class="col-duration">0.62</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:40,505-71:  Objective - Validation of the VISIT_UTM_SOURCE_NAME field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:41,125-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:41,125-89:  Total records identified for VISIT_UTM_SOURCE_NAME field of VISIT_FACT table: 2260
+2023-08-03 16:31:41,125-92:  Passed records identified for VISIT_UTM_SOURCE_NAME field of VISIT_FACT table:  2260
+2023-08-03 16:31:41,125-95:  Failed records identified for VISIT_UTM_SOURCE_NAME field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_utm_term_name_records_validation_09</td>
+          <td class="col-duration">0.47</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:41,127-71:  Objective - Validation of the VISIT_UTM_TERM_NAME field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:41,600-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:41,600-89:  Total records identified for VISIT_UTM_TERM_NAME field of VISIT_FACT table: 2260
+2023-08-03 16:31:41,600-92:  Passed records identified for VISIT_UTM_TERM_NAME field of VISIT_FACT table:  2260
+2023-08-03 16:31:41,600-95:  Failed records identified for VISIT_UTM_TERM_NAME field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_chat_opened_count_records_validation_12</td>
+          <td class="col-duration">0.65</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:41,602-71:  Objective - Validation of the CHAT_OPENED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:42,253-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:42,253-89:  Total records identified for CHAT_OPENED_COUNT field of VISIT_FACT table: 1119
+2023-08-03 16:31:42,253-92:  Passed records identified for CHAT_OPENED_COUNT field of VISIT_FACT table:  1119
+2023-08-03 16:31:42,253-95:  Failed records identified for CHAT_OPENED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_knowledge_base_article_records_validation_13</td>
+          <td class="col-duration">0.33</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:42,255-71:  Objective - Validation of the KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:42,588-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:42,588-89:  Total records identified for KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT field of VISIT_FACT table: 0
+2023-08-03 16:31:42,588-92:  Passed records identified for KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT field of VISIT_FACT table:  0
+2023-08-03 16:31:42,588-95:  Failed records identified for KNOWLEDGEBASE_ARTICLE_CLICKED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_proactive_displayed_records_validation_14</td>
+          <td class="col-duration">0.34</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:42,591-71:  Objective - Validation of the PROACTIVE_DISPLAYED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:42,935-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:42,935-89:  Total records identified for PROACTIVE_DISPLAYED_COUNT field of VISIT_FACT table: 0
+2023-08-03 16:31:42,935-92:  Passed records identified for PROACTIVE_DISPLAYED_COUNT field of VISIT_FACT table:  0
+2023-08-03 16:31:42,935-95:  Failed records identified for PROACTIVE_DISPLAYED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_proactive_clicked_records_validation_15</td>
+          <td class="col-duration">0.33</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:42,938-71:  Objective - Validation of the PROACTIVE_CLICKED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:43,273-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:43,274-89:  Total records identified for PROACTIVE_CLICKED_COUNT field of VISIT_FACT table: 0
+2023-08-03 16:31:43,274-92:  Passed records identified for PROACTIVE_CLICKED_COUNT field of VISIT_FACT table:  0
+2023-08-03 16:31:43,274-95:  Failed records identified for PROACTIVE_CLICKED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_proactive_success_records_validation_16</td>
+          <td class="col-duration">0.34</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:43,276-71:  Objective - Validation of the PROACTIVE_SUCCESS_COUNT field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:43,622-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:43,622-89:  Total records identified for PROACTIVE_SUCCESS_COUNT field of VISIT_FACT table: 0
+2023-08-03 16:31:43,622-92:  Passed records identified for PROACTIVE_SUCCESS_COUNT field of VISIT_FACT table:  0
+2023-08-03 16:31:43,622-95:  Failed records identified for PROACTIVE_SUCCESS_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_proactive_failed_records_validation_17</td>
+          <td class="col-duration">0.35</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:43,626-71:  Objective - Validation of the PROACTIVE_FAILED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:43,977-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:43,977-89:  Total records identified for PROACTIVE_FAILED_COUNT field of VISIT_FACT table: 0
+2023-08-03 16:31:43,977-92:  Passed records identified for PROACTIVE_FAILED_COUNT field of VISIT_FACT table:  0
+2023-08-03 16:31:43,977-95:  Failed records identified for PROACTIVE_FAILED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_visit_page_viewed_count_records_validation_18</td>
+          <td class="col-duration">3.51</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log"> ------------------------------Captured stdout call------------------------------ <br/>
+
+2023-08-03 16:31:43,981-71:  Objective - Validation of the PAGE_VIEWED_COUNT field of the VISIT_FACT table with respect to source
+2023-08-03 16:31:47,491-88:  ---------------- Validation Passed ----------------
+2023-08-03 16:31:47,491-89:  Total records identified for PAGE_VIEWED_COUNT field of VISIT_FACT table: 1123
+2023-08-03 16:31:47,491-92:  Passed records identified for PAGE_VIEWED_COUNT field of VISIT_FACT table:  1123
+2023-08-03 16:31:47,491-95:  Failed records identified for PAGE_VIEWED_COUNT field of VISIT_FACT table:  0
+---------------------------------- Result ----------------------------------------------
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_visit_object_regression_suite.py::test_close_snowflake_connection</td>
+          <td class="col-duration">0.00</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="empty log">No log output captured.</div></td></tr></tbody></table></body></html>

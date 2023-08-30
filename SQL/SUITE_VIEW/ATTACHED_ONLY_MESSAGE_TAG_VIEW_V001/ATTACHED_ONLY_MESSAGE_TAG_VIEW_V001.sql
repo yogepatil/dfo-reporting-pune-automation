@@ -1,0 +1,38 @@
+WITH src AS (SELECT ATTACHED_ONLY_MESSAGE_TAG_KEY,
+                    MESSAGE_KEY,
+                    MESSAGE_ID,
+                    TAG_ID,
+                    INTERACTION_ID,
+                    CUSTOMER_CONTACT_ID,
+                    CONTACT_KEY,
+                    CONTACT_ID,
+                    CONTACT_NO,
+                    AGENT_CONTACT_KEY,
+                    AGENT_CONTACT_ID,
+                    TAG_COLOR,
+                    TAG_TEXT,
+                    TAG_ATTACHED_TIMESTAMP,
+                    _TENANT_ID,
+                    _CREATED_TIMESTAMP,
+                    _MODIFIED_TIMESTAMP
+             FROM DATAHUB.DFO_REFINED.ATTACHED_ONLY_MESSAGE_TAG
+         MINUS
+             SELECT ATTACHED_ONLY_MESSAGE_TAG_KEY,
+                    MESSAGE_KEY,
+                    MESSAGE_ID,
+                    TAG_ID,
+                    INTERACTION_ID,
+                    CUSTOMER_CONTACT_ID,
+                    CONTACT_KEY,
+                    CONTACT_ID,
+                    CONTACT_NO,
+                    AGENT_CONTACT_KEY,
+                    AGENT_CONTACT_ID,
+                    TAG_COLOR,
+                    TAG_TEXT,
+                    TAG_ATTACHED_TIMESTAMP,
+                    _TENANT_ID,
+                    _CREATED_TIMESTAMP,
+                    _MODIFIED_TIMESTAMP
+         FROM DATAHUB.SUITE_REFINED.ATTACHED_ONLY_MESSAGE_TAG_VIEW_V001)
+SELECT src.*, FALSE flag FROM src;

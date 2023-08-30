@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>DFO_Reporting_Regression_Test_Suite_Execution_Report_23.2.3.html</title>
+    <style>body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  /* do not increase min-width as some may use split screens */
+  min-width: 800px;
+  color: #999;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+}
+
+h2 {
+  font-size: 16px;
+  color: black;
+}
+
+p {
+  color: black;
+}
+
+a {
+  color: #999;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/******************************
+ * SUMMARY INFORMATION
+ ******************************/
+#environment td {
+  padding: 5px;
+  border: 1px solid #E6E6E6;
+}
+#environment tr:nth-child(odd) {
+  background-color: #f6f6f6;
+}
+
+/******************************
+ * TEST RESULT COLORS
+ ******************************/
+span.passed,
+.passed .col-result {
+  color: green;
+}
+
+span.skipped,
+span.xfailed,
+span.rerun,
+.skipped .col-result,
+.xfailed .col-result,
+.rerun .col-result {
+  color: orange;
+}
+
+span.error,
+span.failed,
+span.xpassed,
+.error .col-result,
+.failed .col-result,
+.xpassed .col-result {
+  color: red;
+}
+
+/******************************
+ * RESULTS TABLE
+ *
+ * 1. Table Layout
+ * 2. Extra
+ * 3. Sorting items
+ *
+ ******************************/
+/*------------------
+ * 1. Table Layout
+ *------------------*/
+#results-table {
+  border: 1px solid #e6e6e6;
+  color: #999;
+  font-size: 12px;
+  width: 100%;
+}
+#results-table th,
+#results-table td {
+  padding: 5px;
+  border: 1px solid #E6E6E6;
+  text-align: left;
+}
+#results-table th {
+  font-weight: bold;
+}
+
+/*------------------
+ * 2. Extra
+ *------------------*/
+.log {
+  background-color: #e6e6e6;
+  border: 1px solid #e6e6e6;
+  color: black;
+  display: block;
+  font-family: "Courier New", Courier, monospace;
+  height: 230px;
+  overflow-y: scroll;
+  padding: 5px;
+  white-space: pre-wrap;
+}
+.log:only-child {
+  height: inherit;
+}
+
+div.image {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin-left: 5px;
+  overflow: hidden;
+  width: 320px;
+}
+div.image img {
+  width: 320px;
+}
+
+div.video {
+  border: 1px solid #e6e6e6;
+  float: right;
+  height: 240px;
+  margin-left: 5px;
+  overflow: hidden;
+  width: 320px;
+}
+div.video video {
+  overflow: hidden;
+  width: 320px;
+  height: 240px;
+}
+
+.collapsed {
+  display: none;
+}
+
+.expander::after {
+  content: " (show details)";
+  color: #BBB;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.collapser::after {
+  content: " (hide details)";
+  color: #BBB;
+  font-style: italic;
+  cursor: pointer;
+}
+
+/*------------------
+ * 3. Sorting items
+ *------------------*/
+.sortable {
+  cursor: pointer;
+}
+
+.sort-icon {
+  font-size: 0px;
+  float: left;
+  margin-right: 5px;
+  margin-top: 5px;
+  /*triangle*/
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+}
+.inactive .sort-icon {
+  /*finish triangle*/
+  border-top: 8px solid #E6E6E6;
+}
+.asc.active .sort-icon {
+  /*finish triangle*/
+  border-bottom: 8px solid #999;
+}
+.desc.active .sort-icon {
+  /*finish triangle*/
+  border-top: 8px solid #999;
+}
+</style></head>
+  <body onLoad="init()">
+    <script>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function toArray(iter) {
+    if (iter === null) {
+        return null;
+    }
+    return Array.prototype.slice.call(iter);
+}
+
+function find(selector, elem) { // eslint-disable-line no-redeclare
+    if (!elem) {
+        elem = document;
+    }
+    return elem.querySelector(selector);
+}
+
+function findAll(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return toArray(elem.querySelectorAll(selector));
+}
+
+function sortColumn(elem) {
+    toggleSortStates(elem);
+    const colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
+    let key;
+    if (elem.classList.contains('result')) {
+        key = keyResult;
+    } else if (elem.classList.contains('links')) {
+        key = keyLink;
+    } else {
+        key = keyAlpha;
+    }
+    sortTable(elem, key(colIndex));
+}
+
+function showAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(showExtras);
+}
+
+function hideAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(hideExtras);
+}
+
+function showExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.remove('collapsed');
+    expandcollapse.classList.remove('expander');
+    expandcollapse.classList.add('collapser');
+}
+
+function hideExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.add('collapsed');
+    expandcollapse.classList.remove('collapser');
+    expandcollapse.classList.add('expander');
+}
+
+function showFilters() {
+    let visibleString = getQueryParameter('visible') || 'all';
+    visibleString = visibleString.toLowerCase();
+    const checkedItems = visibleString.split(',');
+
+    const filterItems = document.getElementsByClassName('filter');
+    for (let i = 0; i < filterItems.length; i++) {
+        filterItems[i].hidden = false;
+
+        if (visibleString != 'all') {
+            filterItems[i].checked = checkedItems.includes(filterItems[i].getAttribute('data-test-result'));
+            filterTable(filterItems[i]);
+        }
+    }
+}
+
+function addCollapse() {
+    // Add links for show/hide all
+    const resulttable = find('table#results-table');
+    const showhideall = document.createElement('p');
+    showhideall.innerHTML = '<a href="javascript:showAllExtras()">Show all details</a> / ' +
+                            '<a href="javascript:hideAllExtras()">Hide all details</a>';
+    resulttable.parentElement.insertBefore(showhideall, resulttable);
+
+    // Add show/hide link to each result
+    findAll('.col-result').forEach(function(elem) {
+        const collapsed = getQueryParameter('collapsed') || 'Passed';
+        const extras = elem.parentNode.nextElementSibling;
+        const expandcollapse = document.createElement('span');
+        if (extras.classList.contains('collapsed')) {
+            expandcollapse.classList.add('expander');
+        } else if (collapsed.includes(elem.innerHTML)) {
+            extras.classList.add('collapsed');
+            expandcollapse.classList.add('expander');
+        } else {
+            expandcollapse.classList.add('collapser');
+        }
+        elem.appendChild(expandcollapse);
+
+        elem.addEventListener('click', function(event) {
+            if (event.currentTarget.parentNode.nextElementSibling.classList.contains('collapsed')) {
+                showExtras(event.currentTarget);
+            } else {
+                hideExtras(event.currentTarget);
+            }
+        });
+    });
+}
+
+function getQueryParameter(name) {
+    const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function init () { // eslint-disable-line no-unused-vars
+    resetSortHeaders();
+
+    addCollapse();
+
+    showFilters();
+
+    sortColumn(find('.initial-sort'));
+
+    findAll('.sortable').forEach(function(elem) {
+        elem.addEventListener('click',
+            function() {
+                sortColumn(elem);
+            }, false);
+    });
+}
+
+function sortTable(clicked, keyFunc) {
+    const rows = findAll('.results-table-row');
+    const reversed = !clicked.classList.contains('asc');
+    const sortedRows = sort(rows, keyFunc, reversed);
+    /* Whole table is removed here because browsers acts much slower
+     * when appending existing elements.
+     */
+    const thead = document.getElementById('results-table-head');
+    document.getElementById('results-table').remove();
+    const parent = document.createElement('table');
+    parent.id = 'results-table';
+    parent.appendChild(thead);
+    sortedRows.forEach(function(elem) {
+        parent.appendChild(elem);
+    });
+    document.getElementsByTagName('BODY')[0].appendChild(parent);
+}
+
+function sort(items, keyFunc, reversed) {
+    const sortArray = items.map(function(item, i) {
+        return [keyFunc(item), i];
+    });
+
+    sortArray.sort(function(a, b) {
+        const keyA = a[0];
+        const keyB = b[0];
+
+        if (keyA == keyB) return 0;
+
+        if (reversed) {
+            return keyA < keyB ? 1 : -1;
+        } else {
+            return keyA > keyB ? 1 : -1;
+        }
+    });
+
+    return sortArray.map(function(item) {
+        const index = item[1];
+        return items[index];
+    });
+}
+
+function keyAlpha(colIndex) {
+    return function(elem) {
+        return elem.childNodes[1].childNodes[colIndex].firstChild.data.toLowerCase();
+    };
+}
+
+function keyLink(colIndex) {
+    return function(elem) {
+        const dataCell = elem.childNodes[1].childNodes[colIndex].firstChild;
+        return dataCell == null ? '' : dataCell.innerText.toLowerCase();
+    };
+}
+
+function keyResult(colIndex) {
+    return function(elem) {
+        const strings = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed',
+            'Skipped', 'Passed'];
+        return strings.indexOf(elem.childNodes[1].childNodes[colIndex].firstChild.data);
+    };
+}
+
+function resetSortHeaders() {
+    findAll('.sort-icon').forEach(function(elem) {
+        elem.parentNode.removeChild(elem);
+    });
+    findAll('.sortable').forEach(function(elem) {
+        const icon = document.createElement('div');
+        icon.className = 'sort-icon';
+        icon.textContent = 'vvv';
+        elem.insertBefore(icon, elem.firstChild);
+        elem.classList.remove('desc', 'active');
+        elem.classList.add('asc', 'inactive');
+    });
+}
+
+function toggleSortStates(elem) {
+    //if active, toggle between asc and desc
+    if (elem.classList.contains('active')) {
+        elem.classList.toggle('asc');
+        elem.classList.toggle('desc');
+    }
+
+    //if inactive, reset all other functions and add ascending active
+    if (elem.classList.contains('inactive')) {
+        resetSortHeaders();
+        elem.classList.remove('inactive');
+        elem.classList.add('active');
+    }
+}
+
+function isAllRowsHidden(value) {
+    return value.hidden == false;
+}
+
+function filterTable(elem) { // eslint-disable-line no-unused-vars
+    const outcomeAtt = 'data-test-result';
+    const outcome = elem.getAttribute(outcomeAtt);
+    const classOutcome = outcome + ' results-table-row';
+    const outcomeRows = document.getElementsByClassName(classOutcome);
+
+    for(let i = 0; i < outcomeRows.length; i++){
+        outcomeRows[i].hidden = !elem.checked;
+    }
+
+    const rows = findAll('.results-table-row').filter(isAllRowsHidden);
+    const allRowsHidden = rows.length == 0 ? true : false;
+    const notFoundMessage = document.getElementById('not-found-message');
+    notFoundMessage.hidden = !allRowsHidden;
+}
+</script>
+    <h1>DFO_Reporting_Regression_Test_Suite_Execution_Report_23.2.3.html</h1>
+    <p>Report generated on 08-Aug-2023 at 18:23:44 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.2.0</p>
+    <h2>Environment</h2>
+    <table id="environment">
+      <tr>
+        <td>Base URL</td>
+        <td></td></tr>
+      <tr>
+        <td>JAVA_HOME</td>
+        <td>C:\Program Files\Java\jdk-17</td></tr>
+      <tr>
+        <td>Packages</td>
+        <td>{"pluggy": "1.0.0", "pytest": "7.2.0"}</td></tr>
+      <tr>
+        <td>Platform</td>
+        <td>Windows-10-10.0.22621-SP0</td></tr>
+      <tr>
+        <td>Plugins</td>
+        <td>{"allure-pytest": "2.13.2", "base-url": "2.0.0", "html": "3.2.0", "html-reporter": "0.2.9", "metadata": "2.0.4", "playwright": "0.3.0"}</td></tr>
+      <tr>
+        <td>Python</td>
+        <td>3.11.1</td></tr></table>
+    <h2>Summary</h2>
+    <p>0 tests ran in 3.70 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">0 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">1 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <h2>Results</h2>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable result initial-sort" col="result">Result</th>
+          <th class="sortable" col="name">Test</th>
+          <th class="sortable" col="duration">Duration</th>
+          <th class="sortable links" col="links">Links</th></tr>
+        <tr hidden="true" id="not-found-message">
+          <th colspan="4">No results found. Try to check the filters</th></tr></thead>
+      <tbody class="error results-table-row">
+        <tr>
+          <td class="col-result">Error</td>
+          <td class="col-name">test_visit_object_regression_suite.py::collect</td>
+          <td class="col-duration"></td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">test_visit_object_regression_suite.py:40: in &lt;module&gt;<br/>    connection = connection_obj.develope_connection()<br/>Utilities\Utility.py:22: in develope_connection<br/>    conn = snowflake.connector.connect(user=self.username, password=self.password, account=self.account,<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\__init__.py:51: in Connect<br/>    return SnowflakeConnection(**kwargs)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\connection.py:302: in __init__<br/>    self.connect(**kwargs)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\connection.py:566: in connect<br/>    self.__open_connection()<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\connection.py:819: in __open_connection<br/>    self.authenticate_with_retry(self.auth_class)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\connection.py:1075: in authenticate_with_retry<br/>    self._authenticate(auth_instance)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\connection.py:1096: in _authenticate<br/>    auth.authenticate(<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\auth\_auth.py:250: in authenticate<br/>    ret = self._rest._post_request(<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\network.py:704: in _post_request<br/>    ret = self.fetch(<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\network.py:802: in fetch<br/>    ret = self._request_exec_wrapper(<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\network.py:845: in _request_exec_wrapper<br/>    return_object = self._request_exec(<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\network.py:1026: in _request_exec<br/>    raw_ret = session.request(<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\vendored\requests\sessions.py:587: in request<br/>    resp = self.send(prep, **send_kwargs)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\vendored\requests\sessions.py:701: in send<br/>    r = adapter.send(request, **kwargs)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\vendored\requests\adapters.py:489: in send<br/>    resp = conn.urlopen(<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\vendored\urllib3\connectionpool.py:703: in urlopen<br/>    httplib_response = self._make_request(<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\vendored\urllib3\connectionpool.py:386: in _make_request<br/>    self._validate_conn(conn)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\vendored\urllib3\connectionpool.py:1042: in _validate_conn<br/>    conn.connect()<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\vendored\urllib3\connection.py:414: in connect<br/>    self.sock = ssl_wrap_socket(<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\ssl_wrap_socket.py:76: in ssl_wrap_socket_with_ocsp<br/>    ret = ssl_.ssl_wrap_socket(*args, **kwargs)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\vendored\urllib3\util\ssl_.py:402: in ssl_wrap_socket<br/>    context.load_verify_locations(ca_certs, ca_cert_dir, ca_cert_data)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\snowflake\connector\vendored\urllib3\contrib\pyopenssl.py:459: in load_verify_locations<br/>    self._ctx.load_verify_locations(cafile, capath)<br/>..\..\..\..\AppData\Local\Programs\Python\Python311\Lib\site-packages\OpenSSL\SSL.py:796: in load_verify_locations<br/>    load_result = _lib.SSL_CTX_load_verify_locations(<br/><span class="error">E   KeyboardInterrupt</span><br/><br/>During handling of the above exception, another exception occurred:<br/>test_visit_object_regression_suite.py:42: in &lt;module&gt;<br/>    connection_obj.connection_fail()<br/><span class="error">E   AttributeError: &#x27;Snowflake_Connection&#x27; object has no attribute &#x27;connection_fail&#x27;</span><br/> --------------------------------Captured stdout--------------------------------- <br/>### Config. File Dir: C:\Users\yogepatil\Project\DR-Reporting\Automation_Testing\Data-Reporting-Suite-Automation-Framework-0304 -DFO\Configurations\dforeporting_config.ini 
+<br/></div></td></tr></tbody></table></body></html>

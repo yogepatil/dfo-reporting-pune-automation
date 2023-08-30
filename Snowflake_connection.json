@@ -1,0 +1,46 @@
+{
+"dev" : [
+	{
+	"username" : "",
+	"password": "",
+	"account" : "cxone_na1_dev",
+	"warehouse" : "DATALAKE",
+	"database" : "DATAHUB",
+	"schema" : "PUBLIC",
+	"role" : "DL_ADMIN"
+	}
+],
+"test" : [
+	{
+	"username" : "",
+	"password": "",
+	"account" : "cxone_na1_test",
+	"warehouse" : "DATALAKE",
+	"database" : "DATAHUB",
+	"schema" : "PUBLIC",
+	"role" : "DL_ADMIN"
+	}
+],
+"perf" : [
+	{
+	"username" : "",
+	"password": "",
+	"account" : "cxone_na1_perf",
+	"warehouse" : "DATALAKE",
+	"database" : "DATAHUB",
+	"schema" : "PUBLIC",
+	"role" : "DL_ADMIN"
+	}
+],
+"staging" : [
+	{
+	"username" : "",
+	"password": "",
+	"account" : "cxone_na1_staging",
+	"warehouse" : "DATALAKE_CONSOLE_USERS",
+	"database" : "DATAHUB",
+	"schema" : "PUBLIC",
+	"role" : "DL_READ_ONLY"
+	}
+]
+}
